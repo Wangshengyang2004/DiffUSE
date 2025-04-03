@@ -1,0 +1,71 @@
+<?xml version="1.0" encoding="utf-8"?>
+<mujoco model="crazyflie_minimal">
+  <compiler angle="radian" coordinate="local" inertiafromgeom="true" />
+  
+  <option timestep="0.01" integrator="RK4" gravity="0 0 -9.81" density="1.293" viscosity="1.85e-5" />
+  
+  <default>
+    <joint damping="0.001" armature="0.001" />
+    <motor ctrlrange="0 1" ctrllimited="true" />
+    <site size="0.005" rgba="0.8 0.2 0.2 1" />
+  </default>
+  
+  <asset>
+    <mesh name="arm" file="meshes/arm.stl" scale="1 1 1" />
+    <mesh name="motor" file="meshes/motor.stl" scale="1 1 1" />
+    <material name="body" rgba="0.2 0.2 0.2 1" />
+    <material name="arm" rgba="0.7 0.7 0.7 1" />
+    <material name="rotor" rgba="0.8 0.8 0.8 1" />
+  </asset>
+  
+  <worldbody>
+    <light directional="true" diffuse="0.6 0.6 0.6" specular="0.2 0.2 0.2" pos="0 0 3" dir="0 0 -1" />
+    <geom name="floor" type="plane" pos="0 0 0" size="5 5 0.1" rgba="0.2 0.3 0.4 1" />
+    
+    <body name="quadcopter" pos="0 0 0.1">
+      <joint name="root_x" type="slide" axis="1 0 0" pos="0 0 0" />
+      <joint name="root_y" type="slide" axis="0 1 0" pos="0 0 0" />
+      <joint name="root_z" type="slide" axis="0 0 1" pos="0 0 0" />
+      <joint name="root_rotx" type="hinge" axis="1 0 0" pos="0 0 0" />
+      <joint name="root_roty" type="hinge" axis="0 1 0" pos="0 0 0" />
+      <joint name="root_rotz" type="hinge" axis="0 0 1" pos="0 0 0" />
+      
+      <!-- Central body -->
+      <geom type="box" size="0.03 0.03 0.004" material="body" mass="0.025" />
+      
+      <!-- Arms -->
+      <body name="arm1" pos="0.03 0.03 0">
+        <geom type="cylinder" size="0.002 0.03" pos="0 0 0" quat="0.924 0 0 0.383" material="arm" mass="0.001" />
+        <site name="motor1" pos="0 0 0" />
+      </body>
+      <body name="arm2" pos="-0.03 0.03 0">
+        <geom type="cylinder" size="0.002 0.03" pos="0 0 0" quat="0.383 0 0 0.924" material="arm" mass="0.001" />
+        <site name="motor2" pos="0 0 0" />
+      </body>
+      <body name="arm3" pos="-0.03 -0.03 0">
+        <geom type="cylinder" size="0.002 0.03" pos="0 0 0" quat="0.924 0 0 -0.383" material="arm" mass="0.001" />
+        <site name="motor3" pos="0 0 0" />
+      </body>
+      <body name="arm4" pos="0.03 -0.03 0">
+        <geom type="cylinder" size="0.002 0.03" pos="0 0 0" quat="0.383 0 0 -0.924" material="arm" mass="0.001" />
+        <site name="motor4" pos="0 0 0" />
+      </body>
+      
+      <!-- Sensors -->
+      <site name="imu" pos="0 0 0" />
+    </body>
+  </worldbody>
+  
+  <actuator>
+    <motor name="motor1" site="motor1" gear="0.1 0 0 0 0 1" />
+    <motor name="motor2" site="motor2" gear="0.1 0 0 0 0 -1" />
+    <motor name="motor3" site="motor3" gear="0.1 0 0 0 0 1" />
+    <motor name="motor4" site="motor4" gear="0.1 0 0 0 0 -1" />
+  </actuator>
+  
+  <sensor>
+    <accelerometer name="accelerometer" site="imu" />
+    <gyro name="gyro" site="imu" />
+    <velocimeter name="velocimeter" site="imu" />
+  </sensor>
+</mujoco> 

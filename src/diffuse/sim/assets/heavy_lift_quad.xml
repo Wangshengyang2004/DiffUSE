@@ -1,0 +1,94 @@
+<?xml version="1.0" ?>
+<mujoco model="heavy_lift_quad">
+    <compiler angle="radian" coordinate="local" inertiafromgeom="true"/>
+    
+    <option gravity="0 0 -9.81" density="1.293" viscosity="1.85e-5" integrator="RK4"/>
+    
+    <default>
+        <joint damping="0.005" armature="0.002"/>
+        <motor ctrlrange="0 1" ctrllimited="true"/>
+        <site size="0.01" rgba="0.8 0.2 0.2 1"/>
+    </default>
+    
+    <asset>
+        <mesh name="arm" file="meshes/arm.stl" scale="2 2 2"/>
+        <mesh name="motor" file="meshes/motor.stl" scale="2 2 2"/>
+        <material name="body" rgba="0.1 0.1 0.1 1"/>
+        <material name="arm" rgba="0.5 0.5 0.5 1"/>
+        <material name="rotor" rgba="0.7 0.7 0.7 1"/>
+        <texture name="grid" type="2d" builtin="checker" rgb1=".1 .2 .3" rgb2=".2 .3 .4" width="512" height="512"/>
+        <material name="grid" texture="grid" texrepeat="1 1" texuniform="true" reflectance=".2"/>
+    </asset>
+    
+    <worldbody>
+        <light diffuse="0.6 0.6 0.6" pos="0 0 3" dir="0 0 -1"/>
+        <camera name="fixed" pos="3 0 2" xyaxes="-1 0 0 0 1 0"/>
+        
+        <!-- Ground plane with grid texture -->
+        <geom name="floor" type="plane" material="grid" pos="0 0 0" size="10 10 0.1"/>
+        
+        <body name="quadcopter" pos="0 0 0.2">
+            <joint name="root_x" type="slide" axis="1 0 0" pos="0 0 0"/>
+            <joint name="root_y" type="slide" axis="0 1 0" pos="0 0 0"/>
+            <joint name="root_z" type="slide" axis="0 0 1" pos="0 0 0"/>
+            <joint name="root_rotx" type="hinge" axis="1 0 0" pos="0 0 0"/>
+            <joint name="root_roty" type="hinge" axis="0 1 0" pos="0 0 0"/>
+            <joint name="root_rotz" type="hinge" axis="0 0 1" pos="0 0 0"/>
+            
+            <!-- Central body - larger and heavier -->
+            <geom type="box" size="0.06 0.06 0.01" material="body" mass="0.5"/>
+            
+            <!-- Payload attachment point -->
+            <site name="payload" pos="0 0 -0.02"/>
+            
+            <!-- Arms - longer and stronger -->
+            <body name="arm1" pos="0.08 0.08 0">
+                <geom type="cylinder" size="0.004 0.08" pos="0 0 0" quat="0.924 0 0 0.383" material="arm" mass="0.05"/>
+                <site name="motor1" pos="0 0 0"/>
+                <geom name="prop1" type="cylinder" size="0.05 0.002" pos="0 0 0.002" material="rotor" mass="0.02"/>
+            </body>
+            <body name="arm2" pos="-0.08 0.08 0">
+                <geom type="cylinder" size="0.004 0.08" pos="0 0 0" quat="0.383 0 0 0.924" material="arm" mass="0.05"/>
+                <site name="motor2" pos="0 0 0"/>
+                <geom name="prop2" type="cylinder" size="0.05 0.002" pos="0 0 0.002" material="rotor" mass="0.02"/>
+            </body>
+            <body name="arm3" pos="-0.08 -0.08 0">
+                <geom type="cylinder" size="0.004 0.08" pos="0 0 0" quat="0.924 0 0 -0.383" material="arm" mass="0.05"/>
+                <site name="motor3" pos="0 0 0"/>
+                <geom name="prop3" type="cylinder" size="0.05 0.002" pos="0 0 0.002" material="rotor" mass="0.02"/>
+            </body>
+            <body name="arm4" pos="0.08 -0.08 0">
+                <geom type="cylinder" size="0.004 0.08" pos="0 0 0" quat="0.383 0 0 -0.924" material="arm" mass="0.05"/>
+                <site name="motor4" pos="0 0 0"/>
+                <geom name="prop4" type="cylinder" size="0.05 0.002" pos="0 0 0.002" material="rotor" mass="0.02"/>
+            </body>
+            
+            <!-- Sensors -->
+            <site name="imu" pos="0 0 0"/>
+        </body>
+    </worldbody>
+    
+    <actuator>
+        <!-- More powerful motors -->
+        <motor name="motor1" site="motor1" gear="0.3 0 0 0 0 1"/>
+        <motor name="motor2" site="motor2" gear="0.3 0 0 0 0 -1"/>
+        <motor name="motor3" site="motor3" gear="0.3 0 0 0 0 1"/>
+        <motor name="motor4" site="motor4" gear="0.3 0 0 0 0 -1"/>
+    </actuator>
+    
+    <sensor>
+        <accelerometer name="accelerometer" site="imu"/>
+        <gyro name="gyro" site="imu"/>
+        <velocimeter name="velocimeter" site="imu"/>
+        <force name="force1" site="motor1"/>
+        <force name="force2" site="motor2"/>
+        <force name="force3" site="motor3"/>
+        <force name="force4" site="motor4"/>
+        <torque name="torque1" site="motor1"/>
+        <torque name="torque2" site="motor2"/>
+        <torque name="torque3" site="motor3"/>
+        <torque name="torque4" site="motor4"/>
+        <framequat name="orientation" objtype="site" objname="imu"/>
+        <force name="payload_force" site="payload"/>
+    </sensor>
+</mujoco> 

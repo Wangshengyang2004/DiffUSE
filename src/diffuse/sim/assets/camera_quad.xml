@@ -1,0 +1,129 @@
+<?xml version="1.0" ?>
+<mujoco model="camera_quad">
+    <compiler angle="radian" coordinate="local" inertiafromgeom="true"/>
+    
+    <option gravity="0 0 -9.81" density="1.293" viscosity="1.85e-5" integrator="RK4"/>
+    
+    <default>
+        <joint damping="0.001" armature="0.001"/>
+        <motor ctrlrange="0 1" ctrllimited="true"/>
+        <site size="0.005" rgba="0.8 0.2 0.2 1"/>
+    </default>
+    
+    <asset>
+        <mesh name="arm" file="meshes/arm.stl" scale="1.2 1.2 1.2"/>
+        <mesh name="motor" file="meshes/motor.stl" scale="1.2 1.2 1.2"/>
+        <material name="body" rgba="0.3 0.3 0.3 1"/>
+        <material name="arm" rgba="0.6 0.6 0.6 1"/>
+        <material name="rotor" rgba="0.8 0.8 0.8 1"/>
+        <material name="camera" rgba="0.1 0.1 0.1 1"/>
+        <texture name="grid" type="2d" builtin="checker" rgb1=".1 .2 .3" rgb2=".2 .3 .4" width="512" height="512"/>
+        <material name="grid" texture="grid" texrepeat="1 1" texuniform="true" reflectance=".2"/>
+    </asset>
+    
+    <worldbody>
+        <light diffuse="0.6 0.6 0.6" pos="0 0 3" dir="0 0 -1"/>
+        <camera name="fixed" pos="2 0 1" xyaxes="-1 0 0 0 1 0"/>
+        
+        <!-- Ground plane with grid texture -->
+        <geom name="floor" type="plane" material="grid" pos="0 0 0" size="5 5 0.1"/>
+        
+        <body name="quadcopter" pos="0 0 0.15">
+            <joint name="root_x" type="slide" axis="1 0 0" pos="0 0 0"/>
+            <joint name="root_y" type="slide" axis="0 1 0" pos="0 0 0"/>
+            <joint name="root_z" type="slide" axis="0 0 1" pos="0 0 0"/>
+            <joint name="root_rotx" type="hinge" axis="1 0 0" pos="0 0 0"/>
+            <joint name="root_roty" type="hinge" axis="0 1 0" pos="0 0 0"/>
+            <joint name="root_rotz" type="hinge" axis="0 0 1" pos="0 0 0"/>
+            
+            <!-- Central body -->
+            <geom type="box" size="0.04 0.04 0.005" material="body" mass="0.1"/>
+            
+            <!-- Arms -->
+            <body name="arm1" pos="0.04 0.04 0">
+                <geom type="cylinder" size="0.003 0.04" pos="0 0 0" quat="0.924 0 0 0.383" material="arm" mass="0.02"/>
+                <site name="motor1" pos="0 0 0"/>
+                <geom name="prop1" type="cylinder" size="0.03 0.001" pos="0 0 0.002" material="rotor" mass="0.005"/>
+            </body>
+            <body name="arm2" pos="-0.04 0.04 0">
+                <geom type="cylinder" size="0.003 0.04" pos="0 0 0" quat="0.383 0 0 0.924" material="arm" mass="0.02"/>
+                <site name="motor2" pos="0 0 0"/>
+                <geom name="prop2" type="cylinder" size="0.03 0.001" pos="0 0 0.002" material="rotor" mass="0.005"/>
+            </body>
+            <body name="arm3" pos="-0.04 -0.04 0">
+                <geom type="cylinder" size="0.003 0.04" pos="0 0 0" quat="0.924 0 0 -0.383" material="arm" mass="0.02"/>
+                <site name="motor3" pos="0 0 0"/>
+                <geom name="prop3" type="cylinder" size="0.03 0.001" pos="0 0 0.002" material="rotor" mass="0.005"/>
+            </body>
+            <body name="arm4" pos="0.04 -0.04 0">
+                <geom type="cylinder" size="0.003 0.04" pos="0 0 0" quat="0.383 0 0 -0.924" material="arm" mass="0.02"/>
+                <site name="motor4" pos="0 0 0"/>
+                <geom name="prop4" type="cylinder" size="0.03 0.001" pos="0 0 0.002" material="rotor" mass="0.005"/>
+            </body>
+            
+            <!-- 3-axis Gimbal with Camera -->
+            <body name="gimbal_yaw" pos="0.02 0 -0.02">
+                <joint name="gimbal_yaw" type="hinge" axis="0 0 1" damping="0.1" armature="0.001"/>
+                <geom type="cylinder" size="0.01 0.005" material="camera" mass="0.01"/>
+                
+                <body name="gimbal_pitch" pos="0 0 0">
+                    <joint name="gimbal_pitch" type="hinge" axis="0 1 0" damping="0.1" armature="0.001"/>
+                    <geom type="box" size="0.01 0.005 0.01" material="camera" mass="0.01"/>
+                    
+                    <body name="gimbal_roll" pos="0.01 0 0">
+                        <joint name="gimbal_roll" type="hinge" axis="1 0 0" damping="0.1" armature="0.001"/>
+                        <geom type="box" size="0.01 0.01 0.01" material="camera" mass="0.02"/>
+                        <camera name="main_cam" pos="0.01 0 0" xyaxes="0 0 1 0 1 0" fovy="60"/>
+                    </body>
+                </body>
+            </body>
+            
+            <!-- Additional Fixed Cameras -->
+            <camera name="front_cam" pos="0.04 0 0" xyaxes="0 -1 0 0 0 1" fovy="90"/>
+            <camera name="down_cam" pos="0 0 -0.02" xyaxes="1 0 0 0 1 0" fovy="120"/>
+            
+            <!-- Sensors -->
+            <site name="imu" pos="0 0 0"/>
+        </body>
+    </worldbody>
+    
+    <actuator>
+        <!-- Motors -->
+        <motor name="motor1" site="motor1" gear="0.2 0 0 0 0 1"/>
+        <motor name="motor2" site="motor2" gear="0.2 0 0 0 0 -1"/>
+        <motor name="motor3" site="motor3" gear="0.2 0 0 0 0 1"/>
+        <motor name="motor4" site="motor4" gear="0.2 0 0 0 0 -1"/>
+        
+        <!-- Gimbal motors -->
+        <motor name="gimbal_yaw_motor" joint="gimbal_yaw" gear="0.01"/>
+        <motor name="gimbal_pitch_motor" joint="gimbal_pitch" gear="0.01"/>
+        <motor name="gimbal_roll_motor" joint="gimbal_roll" gear="0.01"/>
+    </actuator>
+    
+    <sensor>
+        <!-- Standard sensors -->
+        <accelerometer name="accelerometer" site="imu"/>
+        <gyro name="gyro" site="imu"/>
+        <velocimeter name="velocimeter" site="imu"/>
+        <force name="force1" site="motor1"/>
+        <force name="force2" site="motor2"/>
+        <force name="force3" site="motor3"/>
+        <force name="force4" site="motor4"/>
+        <torque name="torque1" site="motor1"/>
+        <torque name="torque2" site="motor2"/>
+        <torque name="torque3" site="motor3"/>
+        <torque name="torque4" site="motor4"/>
+        <framequat name="orientation" objtype="site" objname="imu"/>
+        
+        <!-- Camera sensors -->
+        <camera name="main" mode="rgb" camera="main_cam"/>
+        <camera name="main_depth" mode="depth" camera="main_cam"/>
+        <camera name="front" mode="rgb" camera="front_cam"/>
+        <camera name="down" mode="rgb" camera="down_cam"/>
+        
+        <!-- Gimbal sensors -->
+        <jointpos name="gimbal_yaw_pos" joint="gimbal_yaw"/>
+        <jointpos name="gimbal_pitch_pos" joint="gimbal_pitch"/>
+        <jointpos name="gimbal_roll_pos" joint="gimbal_roll"/>
+    </sensor>
+</mujoco> 
